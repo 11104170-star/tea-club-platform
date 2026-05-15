@@ -6,6 +6,8 @@ venv/
 env/
 
 .streamlit/secrets.toml
+logs/
+_external/
 
 .DS_Store
 Thumbs.db
