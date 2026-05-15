@@ -96,8 +96,11 @@ def analyze_questionnaire(df: pd.DataFrame) -> str:
 
 def set_font(paragraph) -> None:
     for run in paragraph.runs:
-        run.font.name = "DFKai-SB"
+        run.font.name = "標楷體"
+        run._element.rPr.rFonts.set(qn("w:ascii"), "標楷體")
+        run._element.rPr.rFonts.set(qn("w:hAnsi"), "標楷體")
         run._element.rPr.rFonts.set(qn("w:eastAsia"), "標楷體")
+        run._element.rPr.rFonts.set(qn("w:cs"), "標楷體")
         run.font.size = Pt(11)
 
 

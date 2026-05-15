@@ -124,6 +124,17 @@ if st.button("產生成果書", type="primary"):
         f"本校學生－{school_people}人、校外人士－{outside_people}人，"
         f"共計{total_people}人"
     )
+    fields["teacher_comment"] = teacher_comment.strip()
+
+    if not fields["teacher_comment"]:
+        fields["teacher_comment"] = generate_teacher_comment(
+            api_key=None,
+            model="",
+            activity_name=activity_name,
+            activity_review=activity_review,
+            photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+        )
+        st.session_state["teacher_comment_text"] = fields["teacher_comment"]
 
     try:
         output, result_text = build_report(
