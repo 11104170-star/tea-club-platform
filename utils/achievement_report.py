@@ -185,9 +185,13 @@ def build_report(
         {
             "{{活動流程照片}}": images.get("flow_photo"),
             "{{大合照 }}": images.get("group_photo"),
+            "{{大合照}}": images.get("group_photo"),
             "{{照片1 }}": images.get("photo1"),
+            "{{照片1}}": images.get("photo1"),
             "{{照片2 }}": images.get("photo2"),
+            "{{照片2}}": images.get("photo2"),
             "{{照片3 }}": images.get("photo3"),
+            "{{照片3}}": images.get("photo3"),
         },
     )
 
