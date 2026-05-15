@@ -120,6 +120,7 @@ teacher_comment = st.text_area(
 )
 
 fields = {
+    
     "fill_date": fill_date.strftime("%Y-%m-%d"),
     "activity_name": activity_name,
     "activity_place": activity_place,

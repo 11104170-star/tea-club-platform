@@ -13,8 +13,8 @@ from docx.shared import Inches, Pt
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TEMPLATE_PATH = PROJECT_ROOT / "assets" / "成果書模板_已標記.docx"
-DEFAULT_ACTIVITY_OVERVIEW_TEXT = (
-    "以茶香結合茶點，透過臺灣茶旅行，讓本校學生更認識茶道社，進而加入茶道社社課活動。"
+#DEFAULT_ACTIVITY_OVERVIEW_TEXT = (
+#    "以茶香結合茶點，透過臺灣茶旅行，讓本校學生更認識茶道社，進而加入茶道社社課活動。"
 )
 
 SCORE_VALUES = {"1", "2", "3", "4", "5"}
@@ -175,7 +175,7 @@ def build_report(
         "{{連絡電話}}": fields.get("phone", ""),
         "{{參加人數}}": fields.get("activity_people", ""),
         "{{活動內容概述}}": fields.get("activity_overview", ""),
-        DEFAULT_ACTIVITY_OVERVIEW_TEXT: fields.get("activity_overview", ""),
+        #DEFAULT_ACTIVITY_OVERVIEW_TEXT: fields.get("activity_overview", ""),
         "{{問卷分析結果}}": result_text,
         "{{活動檢討}}": fields.get("activity_review", ""),
         "{{照片1說明}}": fields.get("photo1_desc", ""),
