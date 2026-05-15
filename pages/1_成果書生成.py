@@ -42,8 +42,6 @@ with col2:
 
 with col3:
     phone = st.text_input("連絡電話")
-    president_signature = st.text_input("社長簽名")
-    teacher_signature = st.text_input("老師簽名")
 
 st.subheader("成果內容")
 activity_review = st.text_area("活動檢討", height=140)
@@ -84,8 +82,6 @@ fields = {
     "photo1_desc": photo1_desc,
     "photo2_desc": photo2_desc,
     "photo3_desc": photo3_desc,
-    "president_signature": president_signature,
-    "teacher_signature": teacher_signature,
 }
 
 images = {

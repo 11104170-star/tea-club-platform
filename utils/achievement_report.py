@@ -96,8 +96,8 @@ def analyze_questionnaire(df: pd.DataFrame) -> str:
 
 def set_font(paragraph) -> None:
     for run in paragraph.runs:
-        run.font.name = "Microsoft JhengHei"
-        run._element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft JhengHei")
+        run.font.name = "DFKai-SB"
+        run._element.rPr.rFonts.set(qn("w:eastAsia"), "標楷體")
         run.font.size = Pt(11)
 
 
@@ -174,8 +174,6 @@ def build_report(
         "{{照片2說明}}": fields.get("photo2_desc", ""),
         "{{照片3說明}}": fields.get("photo3_desc", ""),
         "{{指導老師評語}}": fields.get("teacher_comment", ""),
-        "{{社長簽名}}": fields.get("president_signature", ""),
-        "{{老師簽名}}": fields.get("teacher_signature", ""),
     }
 
     replace_text(doc, replacements)
