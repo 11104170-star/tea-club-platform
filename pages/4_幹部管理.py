@@ -7,6 +7,7 @@ from utils.officer_store import (
     delete_officer,
     format_officer_label,
     load_officers,
+    move_officer,
 )
 
 
@@ -52,16 +53,26 @@ officers = load_officers()
 if officers:
     st.dataframe(officers, use_container_width=True, hide_index=True)
 
-    delete_options = list(range(len(officers)))
+    officer_options = list(range(len(officers)))
     selected_index = st.selectbox(
-        "選擇要刪除的幹部",
-        delete_options,
+        "選擇要調整的幹部",
+        officer_options,
         format_func=lambda index: format_officer_label(officers[index]),
     )
 
-    if st.button("刪除幹部"):
-        delete_officer(selected_index)
-        st.success("已刪除幹部。")
-        st.rerun()
+    move_col1, move_col2, delete_col = st.columns(3)
+    with move_col1:
+        if st.button("上移", disabled=selected_index == 0):
+            move_officer(selected_index, -1)
+            st.rerun()
+    with move_col2:
+        if st.button("下移", disabled=selected_index == len(officers) - 1):
+            move_officer(selected_index, 1)
+            st.rerun()
+    with delete_col:
+        if st.button("刪除幹部"):
+            delete_officer(selected_index)
+            st.success("已刪除幹部。")
+            st.rerun()
 else:
     st.info("目前尚未新增幹部。")

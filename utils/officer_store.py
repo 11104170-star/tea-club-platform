@@ -64,6 +64,20 @@ def delete_officer(index: int) -> None:
         save_officers(officers)
 
 
+def move_officer(index: int, direction: int) -> None:
+    officers = load_officers()
+    new_index = index + direction
+
+    if not 0 <= index < len(officers):
+        return
+
+    if not 0 <= new_index < len(officers):
+        return
+
+    officers[index], officers[new_index] = officers[new_index], officers[index]
+    save_officers(officers)
+
+
 def format_officer_label(officer: dict[str, str]) -> str:
     name = officer.get("姓名", "")
     role = officer.get("職位", "")
