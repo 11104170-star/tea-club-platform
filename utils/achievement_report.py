@@ -18,6 +18,17 @@ LEGACY_ACTIVITY_OVERVIEW_TEXT = (
 )
 
 SCORE_VALUES = {"1", "2", "3", "4", "5"}
+EXCLUDED_QUESTION_KEYWORDS = (
+    "請選擇今天社課名稱",
+    "學校",
+    "姓名",
+    "請問您從哪裡知道今天的社課",
+)
+
+
+def should_exclude_question(column: object) -> bool:
+    text = str(column).strip()
+    return any(keyword in text for keyword in EXCLUDED_QUESTION_KEYWORDS)
 
 
 def read_questionnaire(uploaded_file) -> pd.DataFrame:
@@ -48,6 +59,9 @@ def analyze_questionnaire(df: pd.DataFrame) -> str:
     text_questions = []
 
     for column in df.columns:
+        if should_exclude_question(column):
+            continue
+
         values = df[column].dropna().astype(str).str.strip()
         non_empty = values[values != ""]
 
