@@ -80,6 +80,13 @@ def generate_gemini_text(
     return generated_text
 
 
+def clean_generated_text(text: str) -> str:
+    cleaned = text.strip()
+    cleaned = cleaned.removeprefix("```").removesuffix("```").strip()
+    cleaned = cleaned.replace("\n", "")
+    return cleaned
+
+
 def fallback_teacher_comment(
     *,
     activity_name: str,
@@ -128,7 +135,7 @@ def fallback_activity_overview(
 
 
 def is_weak_activity_overview(text: str) -> bool:
-    stripped = text.strip()
+    stripped = clean_generated_text(text)
     if len(stripped) < 45:
         return True
 
@@ -140,11 +147,11 @@ def is_weak_activity_overview(text: str) -> bool:
         "旨在提供社員",
         "透過多元活動",
     )
-    return any(phrase in stripped for phrase in weak_phrases)
+    return sum(1 for phrase in weak_phrases if phrase in stripped) >= 2
 
 
 def is_weak_teacher_comment(text: str) -> bool:
-    stripped = text.strip()
+    stripped = clean_generated_text(text)
     if len(stripped) < 45:
         return True
 
@@ -156,7 +163,41 @@ def is_weak_teacher_comment(text: str) -> bool:
         "社員們展現了積極的參與熱情",
         "整體而言",
     )
-    return any(phrase in stripped for phrase in weak_phrases)
+    return sum(1 for phrase in weak_phrases if phrase in stripped) >= 2
+
+
+def repair_generated_text(
+    *,
+    api_key: str,
+    model: str,
+    system_instruction: str,
+    original_prompt: str,
+    weak_text: str,
+    images: list[object] | None = None,
+) -> str:
+    repair_prompt = f"""
+以下文字太短、太空泛或沒有完整結尾，請根據原始資料重寫成更好的成果書文字。
+
+不佳草稿：
+{weak_text}
+
+原始資料與要求：
+{original_prompt}
+
+重寫要求：
+- 只輸出改寫後的一段文字，不要解釋
+- 不沿用不佳草稿的開頭
+- 內容要具體、完整、自然
+- 必須以句號結尾
+""".strip()
+
+    return generate_gemini_text(
+        api_key=api_key,
+        model=model,
+        system_instruction=system_instruction,
+        prompt=repair_prompt,
+        images=images,
+    )
 
 
 def generate_teacher_comment(
@@ -201,14 +242,27 @@ def generate_teacher_comment(
 {descriptions or "未填"}
 """.strip()
 
-    generated_text = generate_gemini_text(
+    system_instruction = "你是協助學校社團撰寫成果書的行政文字助手。"
+    generated_text = clean_generated_text(generate_gemini_text(
         api_key=api_key,
         model=model,
-        system_instruction="你是協助學校社團撰寫成果書的行政文字助手。",
+        system_instruction=system_instruction,
         prompt=prompt,
-    )
+    ))
 
     if is_weak_teacher_comment(generated_text):
+        repaired_text = clean_generated_text(
+            repair_generated_text(
+                api_key=api_key,
+                model=model,
+                system_instruction=system_instruction,
+                original_prompt=prompt,
+                weak_text=generated_text,
+            )
+        )
+        if not is_weak_teacher_comment(repaired_text):
+            return repaired_text
+
         return fallback_teacher_comment(
             activity_name=activity_name,
             activity_review=activity_review,
@@ -258,15 +312,29 @@ def generate_activity_overview(
 {descriptions or "未填"}
 """.strip()
 
-    generated_text = generate_gemini_text(
+    system_instruction = "你是協助學校社團撰寫成果報告表的行政文字助手。"
+    generated_text = clean_generated_text(generate_gemini_text(
         api_key=api_key,
         model=model,
-        system_instruction="你是協助學校社團撰寫成果報告表的行政文字助手。",
+        system_instruction=system_instruction,
         prompt=prompt,
         images=photos,
-    )
+    ))
 
     if is_weak_activity_overview(generated_text):
+        repaired_text = clean_generated_text(
+            repair_generated_text(
+                api_key=api_key,
+                model=model,
+                system_instruction=system_instruction,
+                original_prompt=prompt,
+                weak_text=generated_text,
+                images=photos,
+            )
+        )
+        if not is_weak_activity_overview(repaired_text):
+            return repaired_text
+
         return fallback_activity_overview(
             activity_name=activity_name,
             photo_descriptions=photo_descriptions,
