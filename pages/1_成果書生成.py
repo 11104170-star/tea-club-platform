@@ -85,11 +85,14 @@ if st.button("由照片說明生成活動內容概述"):
         st.error("活動內容概述生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
         st.exception(exc)
 
-activity_review = st.text_area(
+activity_overview = st.text_area(
     "活動內容概述",
     key="activity_overview_text",
     height=140,
 )
+
+st.subheader("活動檢討與建議事項")
+activity_suggestion = st.text_area("活動檢討與建議事項", height=140)
 
 st.subheader("指導老師評語")
 if "teacher_comment_text" not in st.session_state:
@@ -103,7 +106,7 @@ if st.button("由照片說明生成老師評語"):
             api_key=api_key,
             model=model,
             activity_name=activity_name,
-            activity_review=activity_review,
+            activity_review=activity_suggestion,
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
         )
     except Exception as exc:
@@ -124,7 +127,8 @@ fields = {
     "activity_people": "",
     "activity_leader": activity_leader,
     "phone": phone,
-    "activity_review": activity_review,
+    "activity_overview": activity_overview,
+    "activity_review": activity_suggestion,
     "teacher_comment": teacher_comment,
     "photo1_desc": photo1_desc,
     "photo2_desc": photo2_desc,
@@ -145,24 +149,25 @@ if st.button("產生成果書", type="primary"):
         f"本校學生－{school_people}人、校外人士－{outside_people}人，"
         f"共計{total_people}人"
     )
-    fields["activity_review"] = activity_review.strip()
+    fields["activity_overview"] = activity_overview.strip()
+    fields["activity_review"] = activity_suggestion.strip()
     fields["teacher_comment"] = teacher_comment.strip()
 
-    if not fields["activity_review"]:
-        fields["activity_review"] = generate_activity_overview(
+    if not fields["activity_overview"]:
+        fields["activity_overview"] = generate_activity_overview(
             api_key=None,
             model="",
             activity_name=activity_name,
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
         )
-        st.session_state["activity_overview_text"] = fields["activity_review"]
+        st.session_state["activity_overview_text"] = fields["activity_overview"]
 
     if not fields["teacher_comment"]:
         fields["teacher_comment"] = generate_teacher_comment(
             api_key=None,
             model="",
             activity_name=activity_name,
-            activity_review=activity_review,
+            activity_review=activity_suggestion,
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
         )
         st.session_state["teacher_comment_text"] = fields["teacher_comment"]
