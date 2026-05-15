@@ -5,6 +5,7 @@ from utils.achievement_report import (
     build_report,
 )
 from utils.auth import require_login, logout_button
+from utils.officer_store import format_officer_label, load_officers
 from utils.report_filename import achievement_report_file_name
 from utils.teacher_comment import generate_activity_overview, generate_teacher_comment
 
@@ -33,6 +34,7 @@ with st.expander("範本設定", expanded=False):
     )
 
 st.subheader("基本資料")
+officers = load_officers()
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -44,7 +46,16 @@ with col2:
     activity_date = st.text_input("活動日期")
     school_people = st.number_input("本校學生人數", min_value=0, step=1)
     outside_people = st.number_input("校外人士人數", min_value=0, step=1)
-    activity_leader = st.text_input("活動負責人")
+    if officers:
+        activity_leader = st.selectbox(
+            "活動負責人",
+            officers,
+            format_func=format_officer_label,
+        )
+        activity_leader = format_officer_label(activity_leader)
+    else:
+        activity_leader = ""
+        st.selectbox("活動負責人", ["請先到幹部管理新增幹部"], disabled=True)
 
 with col3:
     phone = st.text_input("連絡電話")
