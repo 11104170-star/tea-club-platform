@@ -41,7 +41,7 @@ def generate_gemini_text(
             }
         ],
         "generationConfig": {
-            "maxOutputTokens": 300,
+            "maxOutputTokens": 500,
         },
     }
     encoded_model = parse.quote(model, safe="")
@@ -127,6 +127,22 @@ def fallback_activity_overview(
     )
 
 
+def is_weak_activity_overview(text: str) -> bool:
+    stripped = text.strip()
+    if len(stripped) < 45:
+        return True
+
+    if not stripped.endswith(("。", "！", "？")):
+        return True
+
+    weak_phrases = (
+        "本次活動內容豐富多元",
+        "旨在提供社員",
+        "透過多元活動",
+    )
+    return any(phrase in stripped for phrase in weak_phrases)
+
+
 def generate_teacher_comment(
     *,
     api_key: str | None,
@@ -201,19 +217,28 @@ def generate_activity_overview(
 - 適合放在學校活動成果報告表
 - 內容正式、清楚、具體
 - 不要條列
-- 80 到 140 字
+- 80 到 140 字，必須是一段完整句子並以句號結尾
 - 若有上傳照片，優先根據照片內容撰寫；照片說明只作為輔助線索
 - 不要捏造未提供的細節
+- 不要使用「本次活動內容豐富多元」或「旨在提供社員」這類空泛模板語句
 
 活動名稱：{activity_name or "未填"}
 照片說明：
 {descriptions or "未填"}
 """.strip()
 
-    return generate_gemini_text(
+    generated_text = generate_gemini_text(
         api_key=api_key,
         model=model,
         system_instruction="你是協助學校社團撰寫成果報告表的行政文字助手。",
         prompt=prompt,
         images=photos,
     )
+
+    if is_weak_activity_overview(generated_text):
+        return fallback_activity_overview(
+            activity_name=activity_name,
+            photo_descriptions=photo_descriptions,
+        )
+
+    return generated_text
