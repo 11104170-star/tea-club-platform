@@ -77,7 +77,7 @@ if "activity_overview_text" not in st.session_state:
 elif st.session_state["activity_overview_text"].strip() == LEGACY_ACTIVITY_OVERVIEW_TEXT:
     st.session_state["activity_overview_text"] = ""
 
-if st.button("由照片說明生成活動內容概述"):
+if st.button("由照片生成活動內容概述"):
     try:
         api_key = st.secrets.get("OPENAI_API_KEY")
         model = st.secrets.get("OPENAI_MODEL", "gpt-5.2")
@@ -86,6 +86,7 @@ if st.button("由照片說明生成活動內容概述"):
             model=model,
             activity_name=activity_name,
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+            photos=[flow_photo, group_photo, photo1, photo2, photo3],
         )
     except Exception as exc:
         st.error("活動內容概述生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
@@ -166,6 +167,7 @@ if st.button("產生成果書", type="primary"):
             model="",
             activity_name=activity_name,
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+            photos=[flow_photo, group_photo, photo1, photo2, photo3],
         )
         st.session_state["activity_overview_text"] = fields["activity_overview"]
 

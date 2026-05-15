@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+
 
 def fallback_teacher_comment(
     *,
@@ -113,6 +115,7 @@ def generate_activity_overview(
     model: str,
     activity_name: str,
     photo_descriptions: list[str],
+    photos: list[object] | None = None,
 ) -> str:
     if not api_key:
         return fallback_activity_overview(
@@ -127,6 +130,20 @@ def generate_activity_overview(
         for description in photo_descriptions
         if description.strip()
     )
+    image_content = []
+
+    for photo in photos or []:
+        if photo is None:
+            continue
+
+        mime_type = getattr(photo, "type", None) or "image/png"
+        image_data = base64.b64encode(photo.getvalue()).decode("ascii")
+        image_content.append(
+            {
+                "type": "input_image",
+                "image_url": f"data:{mime_type};base64,{image_data}",
+            }
+        )
 
     prompt = f"""
 請根據茶道社成果書資料，生成一段「活動內容概述」。
@@ -137,7 +154,8 @@ def generate_activity_overview(
 - 內容正式、清楚、具體
 - 不要條列
 - 80 到 140 字
-- 主要根據照片說明撰寫，不要捏造未提供的細節
+- 若有上傳照片，優先根據照片內容撰寫；照片說明只作為輔助線索
+- 不要捏造未提供的細節
 
 活動名稱：{activity_name or "未填"}
 照片說明：
@@ -154,7 +172,10 @@ def generate_activity_overview(
             },
             {
                 "role": "user",
-                "content": prompt,
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    *image_content,
+                ],
             },
         ],
         max_output_tokens=300,
