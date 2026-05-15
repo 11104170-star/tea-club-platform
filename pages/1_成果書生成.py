@@ -1,5 +1,9 @@
 import streamlit as st
-from utils.achievement_report import DEFAULT_TEMPLATE_PATH, build_report
+from utils.achievement_report import (
+    DEFAULT_TEMPLATE_PATH,
+    LEGACY_ACTIVITY_OVERVIEW_TEXT,
+    build_report,
+)
 from utils.auth import require_login, logout_button
 from utils.report_filename import achievement_report_file_name
 from utils.teacher_comment import generate_activity_overview, generate_teacher_comment
@@ -69,6 +73,8 @@ photo3_desc = st.text_input("照片 3 說明")
 
 st.subheader("活動內容概述")
 if "activity_overview_text" not in st.session_state:
+    st.session_state["activity_overview_text"] = ""
+elif st.session_state["activity_overview_text"].strip() == LEGACY_ACTIVITY_OVERVIEW_TEXT:
     st.session_state["activity_overview_text"] = ""
 
 if st.button("由照片說明生成活動內容概述"):
