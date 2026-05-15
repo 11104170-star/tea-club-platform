@@ -27,6 +27,27 @@ def fallback_teacher_comment(
     )
 
 
+def fallback_activity_overview(
+    *,
+    activity_name: str,
+    photo_descriptions: list[str],
+) -> str:
+    descriptions = [item.strip() for item in photo_descriptions if item.strip()]
+    name = activity_name.strip() or "本次活動"
+
+    if descriptions:
+        joined_descriptions = "、".join(descriptions)
+        return (
+            f"{name}以茶道學習與實作體驗為核心，透過{joined_descriptions}等活動內容，"
+            "引導參與者認識茶席禮儀、茶具使用與泡茶流程，並在實際操作中體會茶道文化的精神。"
+        )
+
+    return (
+        f"{name}以茶道學習與實作體驗為主軸，安排社員參與茶道相關流程，"
+        "讓參與者在活動中認識茶文化、培養禮節觀念，並增進社團成員之間的互動與合作。"
+    )
+
+
 def generate_teacher_comment(
     *,
     api_key: str | None,
@@ -74,6 +95,62 @@ def generate_teacher_comment(
             {
                 "role": "developer",
                 "content": "你是協助學校社團撰寫成果書的行政文字助手。",
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        max_output_tokens=300,
+    )
+
+    return response.output_text.strip()
+
+
+def generate_activity_overview(
+    *,
+    api_key: str | None,
+    model: str,
+    activity_name: str,
+    photo_descriptions: list[str],
+) -> str:
+    if not api_key:
+        return fallback_activity_overview(
+            activity_name=activity_name,
+            photo_descriptions=photo_descriptions,
+        )
+
+    from openai import OpenAI
+
+    descriptions = "\n".join(
+        f"- {description.strip()}"
+        for description in photo_descriptions
+        if description.strip()
+    )
+
+    prompt = f"""
+請根據茶道社成果書資料，生成一段「活動內容概述」。
+
+要求：
+- 使用繁體中文
+- 適合放在學校活動成果報告表
+- 內容正式、清楚、具體
+- 不要條列
+- 80 到 140 字
+- 主要根據照片說明撰寫，不要捏造未提供的細節
+
+活動名稱：{activity_name or "未填"}
+照片說明：
+{descriptions or "未填"}
+""".strip()
+
+    client = OpenAI(api_key=api_key)
+    response = client.responses.create(
+        model=model,
+        input=[
+            {
+                "role": "developer",
+                "content": "你是協助學校社團撰寫成果報告表的行政文字助手。",
             },
             {
                 "role": "user",

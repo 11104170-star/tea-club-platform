@@ -1,8 +1,8 @@
 import streamlit as st
-
 from utils.achievement_report import DEFAULT_TEMPLATE_PATH, build_report
 from utils.auth import require_login, logout_button
-from utils.teacher_comment import generate_teacher_comment
+from utils.report_filename import achievement_report_file_name
+from utils.teacher_comment import generate_activity_overview, generate_teacher_comment
 
 
 st.set_page_config(
@@ -45,9 +45,6 @@ with col2:
 with col3:
     phone = st.text_input("連絡電話")
 
-st.subheader("成果內容")
-activity_review = st.text_area("活動檢討", height=140)
-
 st.subheader("問卷資料")
 questionnaire_file = st.file_uploader(
     "上傳問卷 Excel / CSV",
@@ -69,6 +66,30 @@ with image_col2:
 
 photo3 = st.file_uploader("照片 3", type=["jpg", "jpeg", "png"])
 photo3_desc = st.text_input("照片 3 說明")
+
+st.subheader("活動內容概述")
+if "activity_overview_text" not in st.session_state:
+    st.session_state["activity_overview_text"] = ""
+
+if st.button("由照片說明生成活動內容概述"):
+    try:
+        api_key = st.secrets.get("OPENAI_API_KEY")
+        model = st.secrets.get("OPENAI_MODEL", "gpt-5.2")
+        st.session_state["activity_overview_text"] = generate_activity_overview(
+            api_key=api_key,
+            model=model,
+            activity_name=activity_name,
+            photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+        )
+    except Exception as exc:
+        st.error("活動內容概述生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
+        st.exception(exc)
+
+activity_review = st.text_area(
+    "活動內容概述",
+    key="activity_overview_text",
+    height=140,
+)
 
 st.subheader("指導老師評語")
 if "teacher_comment_text" not in st.session_state:
@@ -124,7 +145,17 @@ if st.button("產生成果書", type="primary"):
         f"本校學生－{school_people}人、校外人士－{outside_people}人，"
         f"共計{total_people}人"
     )
+    fields["activity_review"] = activity_review.strip()
     fields["teacher_comment"] = teacher_comment.strip()
+
+    if not fields["activity_review"]:
+        fields["activity_review"] = generate_activity_overview(
+            api_key=None,
+            model="",
+            activity_name=activity_name,
+            photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+        )
+        st.session_state["activity_overview_text"] = fields["activity_review"]
 
     if not fields["teacher_comment"]:
         fields["teacher_comment"] = generate_teacher_comment(
@@ -147,7 +178,7 @@ if st.button("產生成果書", type="primary"):
         st.error("成果書產生失敗，請確認範本、問卷或圖片格式是否正確。")
         st.exception(exc)
     else:
-        file_name = f"{activity_name or '活動'}_成果書.docx"
+        file_name = achievement_report_file_name(activity_date, activity_name)
         st.success("成果書已產生。")
 
         with st.expander("問卷分析結果預覽", expanded=False):
