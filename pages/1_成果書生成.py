@@ -90,8 +90,8 @@ elif st.session_state["activity_overview_text"].strip() == LEGACY_ACTIVITY_OVERV
 
 if st.button("由照片生成活動內容概述"):
     try:
-        api_key = st.secrets.get("OPENAI_API_KEY")
-        model = st.secrets.get("OPENAI_MODEL", "gpt-5.2")
+        api_key = st.secrets.get("GEMINI_API_KEY")
+        model = st.secrets.get("GEMINI_MODEL", "gemini-2.5-flash")
         st.session_state["activity_overview_text"] = generate_activity_overview(
             api_key=api_key,
             model=model,
@@ -101,7 +101,7 @@ if st.button("由照片生成活動內容概述"):
         )
         st.success("已由照片生成活動內容概述。")
     except Exception as exc:
-        st.error("活動內容概述生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
+        st.error("活動內容概述生成失敗，請確認 GEMINI_API_KEY 是否正確，或稍後再試。")
         st.exception(exc)
 
 activity_overview = st.text_area(
@@ -119,8 +119,8 @@ if "teacher_comment_text" not in st.session_state:
 
 if st.button("由照片說明生成老師評語"):
     try:
-        api_key = st.secrets.get("OPENAI_API_KEY")
-        model = st.secrets.get("OPENAI_MODEL", "gpt-5.2")
+        api_key = st.secrets.get("GEMINI_API_KEY")
+        model = st.secrets.get("GEMINI_MODEL", "gemini-2.5-flash")
         st.session_state["teacher_comment_text"] = generate_teacher_comment(
             api_key=api_key,
             model=model,
@@ -129,7 +129,7 @@ if st.button("由照片說明生成老師評語"):
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
         )
     except Exception as exc:
-        st.error("老師評語生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
+        st.error("老師評語生成失敗，請確認 GEMINI_API_KEY 是否正確，或稍後再試。")
         st.exception(exc)
 
 teacher_comment = st.text_area(

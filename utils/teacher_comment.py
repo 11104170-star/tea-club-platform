@@ -1,6 +1,83 @@
 from __future__ import annotations
 
 import base64
+import json
+from urllib import error, parse, request
+
+
+def generate_gemini_text(
+    *,
+    api_key: str,
+    model: str,
+    system_instruction: str,
+    prompt: str,
+    images: list[object] | None = None,
+) -> str:
+    parts = [{"text": prompt}]
+
+    for image in images or []:
+        if image is None:
+            continue
+
+        mime_type = getattr(image, "type", None) or "image/png"
+        image_data = base64.b64encode(image.getvalue()).decode("ascii")
+        parts.append(
+            {
+                "inlineData": {
+                    "mimeType": mime_type,
+                    "data": image_data,
+                }
+            }
+        )
+
+    payload = {
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}],
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": parts,
+            }
+        ],
+        "generationConfig": {
+            "maxOutputTokens": 300,
+        },
+    }
+    encoded_model = parse.quote(model, safe="")
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/"
+        f"models/{encoded_model}:generateContent"
+    )
+    req = request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key,
+        },
+    )
+
+    try:
+        with request.urlopen(req, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
+        raise RuntimeError("Gemini API 呼叫失敗，請確認 GEMINI_API_KEY 與 GEMINI_MODEL。") from exc
+
+    texts = []
+    for candidate in data.get("candidates", []):
+        content = candidate.get("content", {})
+        for part in content.get("parts", []):
+            text = part.get("text")
+            if text:
+                texts.append(text)
+
+    generated_text = "\n".join(texts).strip()
+    if not generated_text:
+        raise RuntimeError("Gemini API 未回傳文字內容。")
+
+    return generated_text
 
 
 def fallback_teacher_comment(
@@ -65,8 +142,6 @@ def generate_teacher_comment(
             photo_descriptions=photo_descriptions,
         )
 
-    from openai import OpenAI
-
     descriptions = "\n".join(
         f"- {description.strip()}"
         for description in photo_descriptions
@@ -90,23 +165,12 @@ def generate_teacher_comment(
 {descriptions or "未填"}
 """.strip()
 
-    client = OpenAI(api_key=api_key)
-    response = client.responses.create(
+    return generate_gemini_text(
+        api_key=api_key,
         model=model,
-        input=[
-            {
-                "role": "developer",
-                "content": "你是協助學校社團撰寫成果書的行政文字助手。",
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        max_output_tokens=300,
+        system_instruction="你是協助學校社團撰寫成果書的行政文字助手。",
+        prompt=prompt,
     )
-
-    return response.output_text.strip()
 
 
 def generate_activity_overview(
@@ -123,27 +187,11 @@ def generate_activity_overview(
             photo_descriptions=photo_descriptions,
         )
 
-    from openai import OpenAI
-
     descriptions = "\n".join(
         f"- {description.strip()}"
         for description in photo_descriptions
         if description.strip()
     )
-    image_content = []
-
-    for photo in photos or []:
-        if photo is None:
-            continue
-
-        mime_type = getattr(photo, "type", None) or "image/png"
-        image_data = base64.b64encode(photo.getvalue()).decode("ascii")
-        image_content.append(
-            {
-                "type": "input_image",
-                "image_url": f"data:{mime_type};base64,{image_data}",
-            }
-        )
 
     prompt = f"""
 請根據茶道社成果書資料，生成一段「活動內容概述」。
@@ -162,23 +210,10 @@ def generate_activity_overview(
 {descriptions or "未填"}
 """.strip()
 
-    client = OpenAI(api_key=api_key)
-    response = client.responses.create(
+    return generate_gemini_text(
+        api_key=api_key,
         model=model,
-        input=[
-            {
-                "role": "developer",
-                "content": "你是協助學校社團撰寫成果報告表的行政文字助手。",
-            },
-            {
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    *image_content,
-                ],
-            },
-        ],
-        max_output_tokens=300,
+        system_instruction="你是協助學校社團撰寫成果報告表的行政文字助手。",
+        prompt=prompt,
+        images=photos,
     )
-
-    return response.output_text.strip()
