@@ -42,6 +42,8 @@ def generate_gemini_text(
         ],
         "generationConfig": {
             "maxOutputTokens": 500,
+            "temperature": 0.4,
+            "topP": 0.8,
         },
     }
     encoded_model = parse.quote(model, safe="")
@@ -146,8 +148,10 @@ def is_weak_activity_overview(text: str) -> bool:
         "本次活動內容豐富多元",
         "旨在提供社員",
         "透過多元活動",
+        "活動內容豐富多元",
+        "提供社員",
     )
-    return sum(1 for phrase in weak_phrases if phrase in stripped) >= 2
+    return any(phrase in stripped for phrase in weak_phrases)
 
 
 def is_weak_teacher_comment(text: str) -> bool:
@@ -162,8 +166,10 @@ def is_weak_teacher_comment(text: str) -> bool:
         "本次茶道社的社團活動",
         "社員們展現了積極的參與熱情",
         "整體而言",
+        "積極的參與熱情",
+        "社團活動中",
     )
-    return sum(1 for phrase in weak_phrases if phrase in stripped) >= 2
+    return any(phrase in stripped for phrase in weak_phrases)
 
 
 def repair_generated_text(
@@ -189,6 +195,7 @@ def repair_generated_text(
 - 不沿用不佳草稿的開頭
 - 內容要具體、完整、自然
 - 必須以句號結尾
+- 禁止使用「豐富多元」、「積極參與熱情」、「收穫良多」、「圓滿成功」等套話
 """.strip()
 
     return generate_gemini_text(
@@ -224,6 +231,12 @@ def generate_teacher_comment(
     prompt = f"""
 請根據茶道社成果書資料，生成一段「指導老師評語」。
 
+寫作方式：
+1. 不要從「本次茶道社的社團活動」或「本次活動」開頭。
+2. 開頭請直接使用活動名稱，或直接描述學生完成的具體任務。
+3. 內容必須包含至少兩個具體元素，例如茶席布置、茶具整理、泡茶實作、流程分工、活動檢討。
+4. 如果資料不足，只能根據已提供的活動名稱、活動檢討、照片說明寫，不要自行加入不存在的內容。
+
 要求：
 - 使用繁體中文
 - 語氣像學校成果書中的老師評語
@@ -236,13 +249,19 @@ def generate_teacher_comment(
 - 不要使用「本次茶道社的社團活動」或「社員們展現了積極的參與熱情」這類空泛模板語句
 - 避免使用「豐富多元」、「收穫良多」、「圓滿成功」等套話
 
+好範例風格：
+茶席體驗辦理過程完整，學生能依照分工完成茶具整理、茶席布置與泡茶實作，並在活動後提出流程可提前確認的檢討，展現良好的學習態度與團隊合作精神。
+
+壞範例，禁止模仿：
+本次茶道社的社團活動，社員們展現了積極的參與熱情。
+
 活動名稱：{activity_name or "未填"}
 活動檢討：{activity_review or "未填"}
 照片說明：
 {descriptions or "未填"}
 """.strip()
 
-    system_instruction = "你是協助學校社團撰寫成果書的行政文字助手。"
+    system_instruction = "你是嚴謹的學校成果書編輯，只寫具體、可提交的繁體中文行政文字。"
     generated_text = clean_generated_text(generate_gemini_text(
         api_key=api_key,
         model=model,
@@ -295,6 +314,13 @@ def generate_activity_overview(
     prompt = f"""
 請根據茶道社成果書資料，生成一段「活動內容概述」。
 
+寫作方式：
+1. 不要從「本次活動內容豐富多元」、「旨在提供社員」或「本次活動」開頭。
+2. 開頭請直接使用活動名稱；若活動名稱未填，才用「活動以...」開頭。
+3. 段落順序必須是：活動主軸 → 實際進行內容 → 參與者學到或完成的事項。
+4. 實際進行內容必須包含至少兩個具體元素，例如茶席布置、茶具介紹、泡茶練習、茶點搭配、分組實作。
+5. 如果照片或照片說明沒有提供某項內容，不要自行加入。
+
 要求：
 - 使用繁體中文
 - 適合放在學校活動成果報告表
@@ -307,12 +333,18 @@ def generate_activity_overview(
 - 不要使用「本次活動內容豐富多元」或「旨在提供社員」這類空泛模板語句
 - 避免使用「豐富多元」、「收穫良多」、「圓滿成功」等套話
 
+好範例風格：
+茶席體驗以茶道禮儀與泡茶實作為主軸，參與者依序完成茶具整理、茶席布置與沖泡練習，並透過實際操作熟悉茶席流程，理解茶道文化中重視禮節與專注的精神。
+
+壞範例，禁止模仿：
+本次活動內容豐富多元，旨在提供社員。
+
 活動名稱：{activity_name or "未填"}
 照片說明：
 {descriptions or "未填"}
 """.strip()
 
-    system_instruction = "你是協助學校社團撰寫成果報告表的行政文字助手。"
+    system_instruction = "你是嚴謹的學校成果書編輯，只寫具體、可提交的繁體中文行政文字。"
     generated_text = clean_generated_text(generate_gemini_text(
         api_key=api_key,
         model=model,
