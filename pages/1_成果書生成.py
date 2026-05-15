@@ -47,12 +47,12 @@ with col2:
     school_people = st.number_input("本校學生人數", min_value=0, step=1)
     outside_people = st.number_input("校外人士人數", min_value=0, step=1)
     if officers:
-        activity_leader = st.selectbox(
+        selected_leader = st.selectbox(
             "活動負責人",
             officers,
             format_func=format_officer_label,
         )
-        activity_leader = format_officer_label(activity_leader)
+        activity_leader = selected_leader.get("姓名", "")
     else:
         activity_leader = ""
         st.selectbox("活動負責人", ["請先到幹部管理新增幹部"], disabled=True)
