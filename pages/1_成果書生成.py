@@ -2,6 +2,7 @@ import streamlit as st
 
 from utils.achievement_report import DEFAULT_TEMPLATE_PATH, build_report
 from utils.auth import require_login, logout_button
+from utils.teacher_comment import generate_teacher_comment
 
 
 st.set_page_config(
@@ -46,7 +47,6 @@ with col3:
 
 st.subheader("成果內容")
 activity_review = st.text_area("活動檢討", height=140)
-teacher_comment = st.text_area("指導老師評語", height=120)
 
 st.subheader("問卷資料")
 questionnaire_file = st.file_uploader(
@@ -69,6 +69,31 @@ with image_col2:
 
 photo3 = st.file_uploader("照片 3", type=["jpg", "jpeg", "png"])
 photo3_desc = st.text_input("照片 3 說明")
+
+st.subheader("指導老師評語")
+if "teacher_comment_text" not in st.session_state:
+    st.session_state["teacher_comment_text"] = ""
+
+if st.button("由照片說明生成老師評語"):
+    try:
+        api_key = st.secrets.get("OPENAI_API_KEY")
+        model = st.secrets.get("OPENAI_MODEL", "gpt-5.2")
+        st.session_state["teacher_comment_text"] = generate_teacher_comment(
+            api_key=api_key,
+            model=model,
+            activity_name=activity_name,
+            activity_review=activity_review,
+            photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
+        )
+    except Exception as exc:
+        st.error("老師評語生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
+        st.exception(exc)
+
+teacher_comment = st.text_area(
+    "指導老師評語",
+    key="teacher_comment_text",
+    height=120,
+)
 
 fields = {
     "fill_date": fill_date.strftime("%Y-%m-%d"),
