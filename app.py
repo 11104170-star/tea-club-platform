@@ -35,7 +35,7 @@ if st.session_state["authenticated"]:
 
     with col2:
         st.info("AI工具\n\n提供幹部行政與文案輔助工具。")
-        st.info("社員管理\n\n維護社員資料與出缺席狀態。")
+        st.info("幹部管理\n\n維護幹部資料與職位分工。")
 else:
     st.subheader("登入")
     password = st.text_input("請輸入平台密碼", type="password")
