@@ -9,6 +9,7 @@ from utils.officer_store import (
     load_officers,
     move_officer,
     move_officer_to_top,
+    storage_label,
 )
 
 
@@ -26,6 +27,7 @@ with st.sidebar:
 
 st.title("幹部管理")
 st.caption("維護幹部基本資料與職位分工，成果書的活動負責人會使用這份名單。")
+st.caption(f"目前儲存方式：{storage_label()}")
 
 st.subheader("新增幹部")
 with st.form("officer_form", clear_on_submit=True):

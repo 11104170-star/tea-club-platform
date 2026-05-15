@@ -36,6 +36,7 @@ pip install -r requirements.txt
 PASSWORD = "你的平台密碼"
 OPENAI_API_KEY = "你的 OpenAI API key"
 OPENAI_MODEL = "gpt-5.2"
+GITHUB_TOKEN = "你的 GitHub fine-grained token"
 ```
 
 3. 啟動平台：
@@ -49,3 +50,7 @@ streamlit run app.py
 `成果書生成` 頁面已整合舊成果書系統，可使用內建 Word 範本，也可以上傳自訂 `.docx` 範本。問卷資料支援 `.xlsx` 與 `.csv`，照片支援 `.jpg`、`.jpeg`、`.png`。
 
 若設定 `OPENAI_API_KEY`，可由照片與照片說明自動生成活動內容概述，並可由照片說明自動生成指導老師評語；未設定時會使用本機規則產生可編輯草稿。
+
+## 幹部管理永久儲存
+
+若設定 `GITHUB_TOKEN`，幹部名單會永久寫入 GitHub repo 的 `data/officers.json`。Token 需要能讀寫此 repo 的 Contents。未設定時會改用本機檔案儲存。
