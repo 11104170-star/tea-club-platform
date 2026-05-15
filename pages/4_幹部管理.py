@@ -8,6 +8,7 @@ from utils.officer_store import (
     format_officer_label,
     load_officers,
     move_officer,
+    move_officer_to_top,
 )
 
 
@@ -60,7 +61,11 @@ if officers:
         format_func=lambda index: format_officer_label(officers[index]),
     )
 
-    move_col1, move_col2, delete_col = st.columns(3)
+    top_col, move_col1, move_col2, delete_col = st.columns(4)
+    with top_col:
+        if st.button("移到最上面", disabled=selected_index == 0):
+            move_officer_to_top(selected_index)
+            st.rerun()
     with move_col1:
         if st.button("上移", disabled=selected_index == 0):
             move_officer(selected_index, -1)

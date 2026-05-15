@@ -78,6 +78,17 @@ def move_officer(index: int, direction: int) -> None:
     save_officers(officers)
 
 
+def move_officer_to_top(index: int) -> None:
+    officers = load_officers()
+
+    if not 0 <= index < len(officers):
+        return
+
+    officer = officers.pop(index)
+    officers.insert(0, officer)
+    save_officers(officers)
+
+
 def format_officer_label(officer: dict[str, str]) -> str:
     name = officer.get("姓名", "")
     role = officer.get("職位", "")
