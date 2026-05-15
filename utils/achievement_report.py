@@ -15,7 +15,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TEMPLATE_PATH = PROJECT_ROOT / "assets" / "成果書模板_已標記.docx"
 #DEFAULT_ACTIVITY_OVERVIEW_TEXT = (
 #    "以茶香結合茶點，透過臺灣茶旅行，讓本校學生更認識茶道社，進而加入茶道社社課活動。"
-)
+#)
 
 SCORE_VALUES = {"1", "2", "3", "4", "5"}
 
