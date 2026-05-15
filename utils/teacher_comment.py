@@ -143,6 +143,22 @@ def is_weak_activity_overview(text: str) -> bool:
     return any(phrase in stripped for phrase in weak_phrases)
 
 
+def is_weak_teacher_comment(text: str) -> bool:
+    stripped = text.strip()
+    if len(stripped) < 45:
+        return True
+
+    if not stripped.endswith(("。", "！", "？")):
+        return True
+
+    weak_phrases = (
+        "本次茶道社的社團活動",
+        "社員們展現了積極的參與熱情",
+        "整體而言",
+    )
+    return any(phrase in stripped for phrase in weak_phrases)
+
+
 def generate_teacher_comment(
     *,
     api_key: str | None,
@@ -172,8 +188,9 @@ def generate_teacher_comment(
 - 語氣像學校成果書中的老師評語
 - 溫和、正式、肯定學生努力
 - 不要條列
-- 80 到 140 字
+- 80 到 140 字，必須是一段完整句子並以句號結尾
 - 不要捏造未提供的活動細節
+- 不要使用「本次茶道社的社團活動」或「社員們展現了積極的參與熱情」這類空泛模板語句
 
 活動名稱：{activity_name or "未填"}
 活動檢討：{activity_review or "未填"}
@@ -181,12 +198,21 @@ def generate_teacher_comment(
 {descriptions or "未填"}
 """.strip()
 
-    return generate_gemini_text(
+    generated_text = generate_gemini_text(
         api_key=api_key,
         model=model,
         system_instruction="你是協助學校社團撰寫成果書的行政文字助手。",
         prompt=prompt,
     )
+
+    if is_weak_teacher_comment(generated_text):
+        return fallback_teacher_comment(
+            activity_name=activity_name,
+            activity_review=activity_review,
+            photo_descriptions=photo_descriptions,
+        )
+
+    return generated_text
 
 
 def generate_activity_overview(
