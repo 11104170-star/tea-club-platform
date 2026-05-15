@@ -37,7 +37,8 @@ with col1:
 
 with col2:
     activity_date = st.text_input("活動日期")
-    activity_people = st.text_input("參加人數")
+    school_people = st.number_input("本校學生人數", min_value=0, step=1)
+    outside_people = st.number_input("校外人士人數", min_value=0, step=1)
     activity_leader = st.text_input("活動負責人")
 
 with col3:
@@ -74,7 +75,7 @@ fields = {
     "activity_name": activity_name,
     "activity_place": activity_place,
     "activity_date": activity_date,
-    "activity_people": activity_people,
+    "activity_people": "",
     "activity_leader": activity_leader,
     "phone": phone,
     "activity_review": activity_review,
@@ -93,6 +94,12 @@ images = {
 }
 
 if st.button("產生成果書", type="primary"):
+    total_people = school_people + outside_people
+    fields["activity_people"] = (
+        f"本校學生－{school_people}人、校外人士－{outside_people}人，"
+        f"共計{total_people}人"
+    )
+
     try:
         output, result_text = build_report(
             template_file=template_file,
