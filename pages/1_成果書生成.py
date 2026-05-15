@@ -88,6 +88,7 @@ if st.button("由照片生成活動內容概述"):
             photo_descriptions=[photo1_desc, photo2_desc, photo3_desc],
             photos=[flow_photo, group_photo, photo1, photo2, photo3],
         )
+        st.success("已由照片生成活動內容概述。")
     except Exception as exc:
         st.error("活動內容概述生成失敗，請確認 OPENAI_API_KEY 是否正確，或稍後再試。")
         st.exception(exc)
